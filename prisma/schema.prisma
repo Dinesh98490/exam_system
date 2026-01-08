@@ -1,0 +1,166 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = "mongodb://127.0.0.1:27017/exam-portal?directConnection=true"
+}
+
+enum Role {
+  STUDENT
+  LECTURER
+  MODERATOR
+  ADMIN
+}
+
+enum ExamStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model User {
+  id             String        @id @default(auto()) @map("_id") @db.ObjectId
+  email          String        @unique
+  passwordHash   String
+  name           String
+  role           Role          @default(STUDENT)
+  isLocked       Boolean       @default(false)
+  failedLoginAttempts Int      @default(0)
+  mfaSecret      String?
+  mfaEnabled     Boolean       @default(false)
+  passwordChangedAt DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  sessions       Session[]
+  examAttempts   ExamAttempt[]
+  payments       Payment[]
+  activityLogs   ActivityLog[]
+  examAccess     ExamAccess[]
+  passwordHistory PasswordHistory[]
+}
+
+model PasswordHistory {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  passwordHash String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Session {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Exam {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String?
+  durationMinutes Int
+  startTime   DateTime?  // If scheduled
+  endTime     DateTime?  // If scheduled
+  status      ExamStatus @default(DRAFT)
+  price       Float      @default(0) // 0 means free
+  
+  questions   Question[]
+  attempts    ExamAttempt[]
+  accessList  ExamAccess[]
+  
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Question {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  examId      String   @db.ObjectId
+  text        String
+  options     String[] // Array of strings for options
+  correctOptionIndex Int
+  points      Int      @default(1)
+  
+  exam        Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+}
+
+model ExamAccess {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  examId    String   @db.ObjectId
+  grantedAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exam      Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, examId])
+}
+
+model ExamAttempt {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  examId      String   @db.ObjectId
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+  score       Float?
+  
+  submissions Submission[]
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exam        Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  // One attempt per exam enforcement could be done via unique constraint or logic
+  // The User Request asks for "one-attempt-only enforced".
+  // A unique constraint here ensures it at the DB level.
+  @@unique([userId, examId]) 
+}
+
+model Submission {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  attemptId     String   @db.ObjectId
+  questionId    String   @db.ObjectId
+  selectedOptionIndex Int
+  isCorrect     Boolean
+  
+  attempt       ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  // Question relation not strictly enforcing referential integrity in MongoDB in the same way, but useful for types
+}
+
+model Payment {
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String        @db.ObjectId
+  examId        String        @db.ObjectId
+  amount        Float
+  provider      String        // "esewa" | "khalti"
+  transactionId String        @unique
+  status        PaymentStatus @default(PENDING)
+  metadata      Json?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  user          User          @relation(fields: [userId], references: [id])
+}
+
+model ActivityLog {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String?  @db.ObjectId // Nullable for system events or failed logins where user not known
+  action    String
+  resource  String?
+  ipAddress String?
+  metadata  Json?
+  timestamp DateTime @default(now())
+  
+  user      User?    @relation(fields: [userId], references: [id])
+}

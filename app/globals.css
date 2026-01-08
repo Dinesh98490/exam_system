@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f8f9fa; /* Off-white, academic paper feel */
+  --foreground: #1a202c; /* Near black for readability */
+  --primary: #003366; /* Institutional Dark Blue */
+  --primary-foreground: #ffffff;
+  --secondary: #e2e8f0; /* Neutral gray for borders/dividers */
+  --accent: #d32f2f; /* Muted red for errors/warnings */
+  --success: #166534; /* Academic green */
+  --border: #cbd5e1;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-success: var(--success);
+  --color-border: var(--border);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
