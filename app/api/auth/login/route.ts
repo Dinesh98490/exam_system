@@ -7,6 +7,8 @@ import { loginSchema } from "@/lib/validation";
 
 const MAX_FAILED_ATTEMPTS = 5;
 
+
+// login route handler
 export async function POST(req: NextRequest) {
   try {
     await dbConnect(); // Ensure DB connection
