@@ -8,6 +8,8 @@ import Link from "next/link";
 import { ArrowLeft, Download } from "lucide-react";
 import UserModel from "@/models/User"; // Ensure this import exists or is correct
 
+
+// exams result page
 export default async function ExamResultsPage({
   params,
 }: {
