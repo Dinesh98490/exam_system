@@ -4,6 +4,8 @@ import UserModel from "@/models/User";
 import { redirect } from "next/navigation";
 import { User, Shield, Mail, Calendar, Hash } from "lucide-react";
 
+
+// student profile page
 export default async function ProfilePage() {
   const session = await getSession();
   if (!session) redirect("/login");
