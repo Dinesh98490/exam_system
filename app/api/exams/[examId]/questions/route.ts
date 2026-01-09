@@ -4,6 +4,8 @@ import dbConnect from "@/lib/mongoose";
 import { Question } from "@/models/Exam";
 import { Role } from "@/lib/rbac-definitions";
 
+
+// Handler to add a question to an exam
 export async function POST(req: NextRequest, { params }: { params: Promise<{ examId: string }> }) {
   const { examId } = await params;
   const session = await getSession();
