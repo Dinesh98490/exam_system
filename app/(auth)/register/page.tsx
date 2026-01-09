@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Lock, AlertCircle, Loader2 } from "lucide-react";
 import { PasswordStrengthMeter } from "@/components/PasswordStrengthMeter";
 
+// register page component
 export default function RegisterPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
