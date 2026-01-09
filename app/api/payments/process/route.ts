@@ -22,6 +22,7 @@ function encryptData(data: string) {
   return crypto.createHash('sha256').update(data).digest('hex');
 }
 
+// payments logics
 export async function POST(req: NextRequest) {
   try {
     const cookieStore = await cookies();
