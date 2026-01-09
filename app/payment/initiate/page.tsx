@@ -10,6 +10,8 @@ import {
 } from "@/lib/payment/esewa";
 import { v4 as uuidv4 } from "uuid";
 
+
+// Payment initiation page
 export default async function InitiatePayment({
   searchParams,
 }: {
