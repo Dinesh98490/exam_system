@@ -6,6 +6,9 @@ import { Save, Plus, Trash2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
+
+
+// edit examo page component
 export default function EditExamPage() {
   const router = useRouter();
   const params = useParams(); // { examId: string }
