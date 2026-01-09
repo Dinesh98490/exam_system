@@ -1,5 +1,7 @@
 "use client";
 
+
+// lecturer sidebar component
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
