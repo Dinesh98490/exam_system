@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, History, User, LogOut, BookOpen } from "lucide-react";
 
+// student sidebar component
 export function StudentSidebar() {
   const pathname = usePathname();
 
