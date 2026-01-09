@@ -4,6 +4,7 @@ import dbConnect from "@/lib/mongoose";
 import { ExamAttempt } from "@/models/ExamAttempt";
 import { redirect } from "next/navigation";
 
+// exam attempt history page
 export default async function ExamHistoryPage() {
   const session = await getSession();
   if (!session) redirect("/login");
