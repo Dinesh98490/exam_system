@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { PlusCircle, Save } from "lucide-react";
 
+
+// create exam page component
 export default function CreateExamPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
