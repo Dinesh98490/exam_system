@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Lock, AlertCircle, Loader2 } from "lucide-react";
 
+
+// login page
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
