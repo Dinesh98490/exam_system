@@ -13,6 +13,8 @@ import {
 
 import { ExamAccess } from "@/models/ExamAccess";
 
+
+// student dashboard exams page
 export default async function StudentDashboard() {
   const session = await getSession();
   if (!session) redirect("/login");
