@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Shield, AlertTriangle, Lock } from "lucide-react";
 
+// MFA Page Component
 export default function MfaPage() {
   const router = useRouter();
   const [code, setCode] = useState("");
