@@ -5,6 +5,7 @@ export enum Role {
   ADMIN = 'ADMIN',
 }
 
+// Define role hierarchy
 export const ROLES_HIERARCHY: Record<Role, number> = {
   [Role.STUDENT]: 0,
   [Role.LECTURER]: 1,
