@@ -1,6 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
 
-// Question Schema
+// Question Schema for individual questions in an exam
 const QuestionSchema = new Schema({
   examId: { type: Schema.Types.ObjectId, ref: 'Exam', required: true },
   text: { type: String, required: true },
@@ -11,7 +11,7 @@ const QuestionSchema = new Schema({
 
 export const Question = mongoose.models.Question || mongoose.model('Question', QuestionSchema);
 
-// Exam Schema
+// Exam Schema for creating and managing exams
 const ExamSchema = new Schema({
   title: { type: String, required: true },
   description: String,
