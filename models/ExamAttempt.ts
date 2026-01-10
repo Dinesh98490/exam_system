@@ -1,5 +1,7 @@
 import mongoose, { Schema } from 'mongoose';
 
+
+// Schema to track individual exam attempts by users
 const ExamAttemptSchema = new Schema({
   userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   examId: { type: Schema.Types.ObjectId, ref: 'Exam', required: true },
