@@ -4,6 +4,8 @@ import { Role } from "@prisma/client";
 
 import { passwordSchema } from "@/lib/auth/password";
 
+
+// User registration validation schema
 export const registerSchema = z.object({
   email: z.string().email(),
   password: passwordSchema,
