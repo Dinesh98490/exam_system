@@ -4,6 +4,8 @@ export const ESEWA_TEST_PID = 'EPAYTEST';
 export const ESEWA_TEST_SECRET = '8gBm/:&EnhH.1/q';
 export const ESEWA_URL = 'https://rc-epay.esewa.com.np/api/epay/main/v2/form';
 
+
+// integrations of the esewa payment gateway
 export function generateEsewaSignature(totalAmount: string, transactionUuid: string, productCode: string) {
   const message = `total_amount=${totalAmount},transaction_uuid=${transactionUuid},product_code=${productCode}`;
   const hmac = crypto.createHmac('sha256', ESEWA_TEST_SECRET);
