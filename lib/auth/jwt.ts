@@ -1,6 +1,6 @@
 import { SignJWT, jwtVerify } from 'jose';
 // Role import removed
-
+// rport { Role } from '@prisma/client';
 const SECRET_KEY = process.env.JWT_SECRET || 'super-secret-key-change-this-in-prod';
 const key = new TextEncoder().encode(SECRET_KEY);
 
