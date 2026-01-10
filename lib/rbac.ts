@@ -4,6 +4,8 @@ import { hasRole } from './rbac-definitions';
 
 export { hasRole, ROLES_HIERARCHY } from './rbac-definitions';
 
+
+// rbac authorization check
 export async function authorize(requiredRole: Role) {
   const session = await getSession();
   if (!session) {
