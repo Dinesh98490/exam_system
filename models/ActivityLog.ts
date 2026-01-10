@@ -1,6 +1,8 @@
 
 import mongoose, { Schema } from 'mongoose';
 
+
+// Define the ActivityLog schema
 const ActivityLogSchema = new Schema({
   userId: { type: Schema.Types.ObjectId, ref: 'User', required: false },
   action: { type: String, required: true },
