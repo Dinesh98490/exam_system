@@ -12,6 +12,8 @@ import {
   KeyRound,
 } from "lucide-react";
 
+
+// Landing page for the Secure Online Examination & Proctoring System
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white font-sans text-gray-900 flex flex-col">
