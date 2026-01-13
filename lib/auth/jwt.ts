@@ -1,6 +1,7 @@
 import { SignJWT, jwtVerify } from 'jose';
 // Role import removed
 // rport { Role } from '@prisma/client';
+// JWT Secret Key - In production, use a more secure method to manage secrets
 const SECRET_KEY = process.env.JWT_SECRET || 'super-secret-key-change-this-in-prod';
 const key = new TextEncoder().encode(SECRET_KEY);
 
