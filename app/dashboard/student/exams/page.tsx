@@ -15,6 +15,7 @@ import { ExamAccess } from "@/models/ExamAccess";
 
 
 // student dashboard exams page
+// Lists all available exams for the student
 export default async function StudentDashboard() {
   const session = await getSession();
   if (!session) redirect("/login");
