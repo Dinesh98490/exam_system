@@ -14,6 +14,7 @@ export interface SessionPayload {
 const SESSION_DURATION = 60 * 60 * 1000; // 1 hr
 
 // Creates a session: DB entry, JWT, and cookie
+// Also deletes any existing sessions for the user
 export async function createSession(userId: string, role: string) {
   await dbConnect(); // Ensure DB is connected
   
