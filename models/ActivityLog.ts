@@ -3,6 +3,7 @@ import mongoose, { Schema } from 'mongoose';
 
 
 // Define the ActivityLog schema
+// This schema tracks user activities such as logins, resource accesses, and other actions
 const ActivityLogSchema = new Schema({
   userId: { type: Schema.Types.ObjectId, ref: 'User', required: false },
   action: { type: String, required: true },
