@@ -6,6 +6,7 @@ import { Role } from "@/lib/rbac-definitions";
 
 
 // Handler to add a question to an exam
+// Only lecturers can add questions
 export async function POST(req: NextRequest, { params }: { params: Promise<{ examId: string }> }) {
   const { examId } = await params;
   const session = await getSession();
