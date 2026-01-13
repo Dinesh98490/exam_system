@@ -7,6 +7,7 @@ import { decrypt } from '@/lib/auth/jwt';
 import crypto from 'crypto';
 
 // Schema for payment input
+// In real-world, use PCI-DSS compliant methods and never handle raw card data directly.
 const paymentSchema = z.object({
   examId: z.string(),
   cardNumber: z.string().min(16).max(16),
