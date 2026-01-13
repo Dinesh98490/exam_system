@@ -4,6 +4,8 @@ import dbConnect from "@/lib/mongoose";
 import { Exam, Question } from "@/models/Exam";
 import { ExamAttempt } from "@/models/ExamAttempt";
 
+
+// Submit or Save Exam Attempt
 export async function POST(req: NextRequest, { params }: { params: Promise<{ attemptId: string }> }) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
