@@ -6,6 +6,7 @@ import { ObjectId } from 'mongodb';
 
 
 //password validation schema
+// At least 8 characters, one uppercase, one lowercase, one number, one special character
 export const passwordSchema = z.string()
   .min(8, 'Password must be at least 8 characters long')
   .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
