@@ -5,6 +5,7 @@ import { Exam, Question } from "@/models/Exam";
 import { ExamAttempt } from "@/models/ExamAttempt";
 
 // logics to start an exam
+// If already attempted and in-progress, resume it
 export async function POST(req: NextRequest, { params }: { params: Promise<{ examId: string }> }) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
