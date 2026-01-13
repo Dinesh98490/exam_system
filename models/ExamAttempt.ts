@@ -2,6 +2,7 @@ import mongoose, { Schema } from 'mongoose';
 
 
 // Schema to track individual exam attempts by users
+// This includes start time, completion time, score, and answers given
 const ExamAttemptSchema = new Schema({
   userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   examId: { type: Schema.Types.ObjectId, ref: 'Exam', required: true },
