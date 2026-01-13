@@ -17,4 +17,5 @@ const PaymentSchema = new Schema({
 }, { timestamps: true });
 
 // Prevent model overwrite
+// This is useful in serverless environments where code may be reloaded
 export const Payment = mongoose.models.Payment || mongoose.model('Payment', PaymentSchema);
