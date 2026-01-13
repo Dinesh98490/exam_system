@@ -1,6 +1,7 @@
 import mongoose, { Schema } from 'mongoose';
 
 // Question Schema for individual questions in an exam
+// Each question has text, options, correct answer, and points
 const QuestionSchema = new Schema({
   examId: { type: Schema.Types.ObjectId, ref: 'Exam', required: true },
   text: { type: String, required: true },
