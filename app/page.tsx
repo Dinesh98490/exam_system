@@ -14,6 +14,7 @@ import {
 
 
 // Landing page for the Secure Online Examination & Proctoring System
+// Highlights key features, principles, and call to action for users.
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white font-sans text-gray-900 flex flex-col">
