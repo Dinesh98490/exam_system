@@ -19,6 +19,7 @@ const UserSchema = new Schema({
 }, { timestamps: true });
 
 // Check if model already exists to prevent OverwriteModelError
+// This is useful in serverless environments where code may be reloaded
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
 
 export default User;
