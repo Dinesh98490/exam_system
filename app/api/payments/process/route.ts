@@ -1,9 +1,11 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { prisma } from '@/lib/db';
-import { cookies } from 'next/headers';
-import { decrypt } from '@/lib/auth/jwt';
+import dbConnect from '@/lib/mongoose';
+import { Exam } from '@/models/Exam';
+import { Payment } from '@/models/Payment';
+import { ExamAccess } from '@/models/ExamAccess';
+import { ActivityLog } from '@/models/ActivityLog';
+import { getSession } from '@/lib/auth/session';
 import crypto from 'crypto';
 
 // Schema for payment input
@@ -26,21 +28,20 @@ function encryptData(data: string) {
 // payments logics
 export async function POST(req: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const sessionToken = cookieStore.get('session')?.value;
-
-    if (!sessionToken) {
+    const session = await getSession();
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const payload = await decrypt(sessionToken);
-    const userId = payload.sub || payload.id;
+    const userId = session.userId;
 
     const body = await req.json();
     const { examId, cardNumber, expiry, cvv, cardHolderName } = paymentSchema.parse(body);
 
+    await dbConnect();
+
     // 1. Verify Exam exists
-    const exam = await prisma.exam.findUnique({ where: { id: examId } });
+    const exam = await Exam.findById(examId);
     if (!exam) {
       return NextResponse.json({ error: 'Exam not found' }, { status: 404 });
     }
@@ -49,63 +50,42 @@ export async function POST(req: NextRequest) {
     // We do NOT store card details. checking algorithm luhn's etc.
     // Encrypt sensitive data for transient processing logs if needed (masked)
     const maskedCard = `****-****-****-${cardNumber.slice(-4)}`;
-    
-    // 3. Create Payment Record (Pending)
+
+    // 3. Create Payment Record (Success immediately for bypass)
     const transactionId = `SECURE-${crypto.randomUUID()}`;
-    const payment = await prisma.payment.create({
-      data: {
-        userId,
-        examId,
-        amount: exam.price,
-        provider: 'CUSTOM_SECURE',
-        transactionId,
-        status: 'PENDING',
-        metadata: {
-            maskedCard,
-            cardHolderHash: encryptData(cardHolderName)
-        }
+    const payment = await Payment.create({
+      userId,
+      examId,
+      amount: exam.price,
+      provider: 'CUSTOM_SECURE',
+      transactionId,
+      status: 'SUCCESS', // Always success as per bypass request
+      metadata: {
+        maskedCard,
+        cardHolderHash: encryptData(cardHolderName)
       }
     });
 
-    // 4. Simulate Bank API Call
-    const success = true; // Mock success
+    // 4. Grant Access
+    await ExamAccess.findOneAndUpdate(
+      { userId, examId },
+      { grantedAt: new Date() },
+      { upsert: true }
+    );
 
-    if (success) {
-      await prisma.payment.update({
-        where: { id: payment.id },
-        data: { status: 'COMPLETED' }
-      });
-      
-      await prisma.examAccess.create({
-        data: {
-          userId,
-          examId
-        }
-      });
+    // 5. Audit Log (Securely)
+    await ActivityLog.create({
+      userId,
+      action: 'PAYMENT_SUCCESS_SECURE_BYPASS',
+      resource: examId,
+      metadata: { transactionId, maskedCard }
+    });
 
-      // 5. Audit Log (Securely)
-      // 5. Audit Log (Securely)
-      await prisma.activityLog.create({
-        data: {
-            userId,
-            action: 'PAYMENT_SUCCESS_SECURE',
-            resource: examId,
-            metadata: { transactionId, maskedCard }
-        }
-      });
-
-      return NextResponse.json({ message: 'Payment Successful', transactionId });
-    } else {
-        await prisma.payment.update({
-            where: { id: payment.id },
-            data: { status: 'FAILED' }
-        });
-        return NextResponse.json({ error: 'Payment Declined' }, { status: 400 });
-    }
+    return NextResponse.json({ message: 'Payment Successful', transactionId });
 
   } catch (error: any) {
     if (error instanceof z.ZodError) {
-        return NextResponse.json({ error: 'Invalid payment details' }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid payment details' }, { status: 400 });
     }
     console.error("PAYMENT_ERROR:", error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

@@ -11,11 +11,11 @@ const PROTECTED_ROUTES = [
   { path: '/api/exams', role: Role.STUDENT },
 ];
 
-const PUBLIC_ROUTES = ['/login', '/register', '/api/auth/login', '/api/auth/register', '/api/webhooks'];
+const PUBLIC_ROUTES = ['/login', '/register', '/verify-otp', '/api/auth/login', '/api/auth/register', '/api/auth/verify-otp', '/api/auth/send-otp', '/api/webhooks'];
 
 export default async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
-const isPublic = path === '/' || PUBLIC_ROUTES.some(r => path.startsWith(r));
+  const isPublic = path === '/' || PUBLIC_ROUTES.some(r => path.startsWith(r));
 
   if (isPublic) {
     const response = NextResponse.next();
@@ -38,14 +38,14 @@ const isPublic = path === '/' || PUBLIC_ROUTES.some(r => path.startsWith(r));
 
     const protectedRoute = PROTECTED_ROUTES.find(r => path.startsWith(r.path));
     if (protectedRoute) {
-        if (!hasRole(payload.role as Role, protectedRoute.role)) {
-            // Redirect to login or unauthorized page to prevent loop
-            const url = new URL('/login', req.nextUrl);
-            url.searchParams.set('error', 'Unauthorized');
-            return NextResponse.redirect(url);
-        }
+      if (!hasRole(payload.role as Role, protectedRoute.role)) {
+        // Redirect to login or unauthorized page to prevent loop
+        const url = new URL('/login', req.nextUrl);
+        url.searchParams.set('error', 'Unauthorized');
+        return NextResponse.redirect(url);
+      }
     }
-    
+
     const response = NextResponse.next();
     response.headers.set('X-Frame-Options', 'DENY');
     response.headers.set('X-Content-Type-Options', 'nosniff');

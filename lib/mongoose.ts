@@ -18,31 +18,51 @@ if (!cached) {
 }
 
 async function dbConnect() {
-  if (cached.conn) {
+  if (cached.conn && mongoose.connection.readyState === 1) {
+    console.log("DB: Using existing open connection");
     return cached.conn;
   }
 
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
-      directConnection: true, // Force direct connection for standalone instance
+      serverSelectionTimeoutMS: 10000,
     };
 
-    // Clean up URI if it has duplicate params (robustness)
-    let uri = MONGODB_URI;
-    if (uri.includes('?')) {
-        // Basic check to see if we need to append or replace props
-        // For simplicity, we trust the env or the fallback
-    }
+    console.log("DB: Starting new connection to", MONGODB_URI.split('@').pop());
 
-    cached.promise = mongoose.connect(uri, opts).then((mongoose) => {
-      return mongoose;
+    // Set global bufferCommands to false to prevent the annoying timeout error
+    mongoose.set('bufferCommands', false);
+
+    cached.promise = mongoose.connect(MONGODB_URI, opts).then((m) => {
+      console.log("DB: mongoose.connect resolved. ReadyState:", m.connection.readyState);
+      return m;
     });
   }
-  
+
   try {
     cached.conn = await cached.promise;
+
+    // Wait for the connection to be fully open if it's still connecting
+    if (mongoose.connection.readyState !== 1) {
+      console.log("DB: Waiting for connection to open... Current state:", mongoose.connection.readyState);
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error("DB: Timeout waiting for connection to open")), 5000);
+        mongoose.connection.once('connected', () => {
+          clearTimeout(timeout);
+          console.log("DB: Connection opened event received");
+          resolve(true);
+        });
+        mongoose.connection.once('error', (err) => {
+          clearTimeout(timeout);
+          reject(err);
+        });
+      });
+    }
+
+    console.log("DB: Connection is ready");
   } catch (e) {
+    console.error("DB: Connection failed", e);
     cached.promise = null;
     throw e;
   }

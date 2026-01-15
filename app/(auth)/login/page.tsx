@@ -5,14 +5,11 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Lock, AlertCircle, Loader2 } from "lucide-react";
 
-
 // login page
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [mfaCode, setMfaCode] = useState("");
-  const [mfaRequired, setMfaRequired] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -28,7 +25,6 @@ export default function LoginPage() {
         body: JSON.stringify({
           email,
           password,
-          mfaCode: mfaRequired ? mfaCode : undefined,
         }),
       });
 
@@ -38,19 +34,19 @@ export default function LoginPage() {
         throw new Error(data.error || "Login failed");
       }
 
-      if (data.mfaRequired) {
-        setMfaRequired(true);
-        setLoading(false);
+      if (data.otpRequired) {
+        // Redirect to OTP verification page with email as query param
+        router.push(`/verify-otp?email=${encodeURIComponent(email)}`);
         return;
       }
 
-      // Redirect based on role or default
+      // Fallback for role-based redirect if OTP is disabled or bypassed (though API always requires it now)
       if (data.user?.role === "ADMIN") router.push("/dashboard/admin");
       else if (data.user?.role === "LECTURER")
         router.push("/dashboard/lecturer");
       else router.push("/dashboard/student");
 
-      router.refresh(); // Refresh to update Header session
+      router.refresh();
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -75,59 +71,35 @@ export default function LoginPage() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {!mfaRequired ? (
-          <>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                University Email
-              </label>
-              <input
-                type="email"
-                required
-                className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all"
-                placeholder="student@university.edu"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            University Email
+          </label>
+          <input
+            type="email"
+            required
+            className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all"
+            placeholder="student@university.edu"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  type="password"
-                  required
-                  className="w-full p-2 pr-10 border border-gray-300 rounded focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                <Lock className="absolute right-3 top-2.5 h-4 w-4 text-gray-400" />
-              </div>
-            </div>
-          </>
-        ) : (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Authenticator Code (MFA)
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                required
-                maxLength={6}
-                className="w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all text-center tracking-[1em] font-mono"
-                placeholder="000000"
-                value={mfaCode}
-                onChange={(e) => setMfaCode(e.target.value)}
-              />
-            </div>
-            <p className="text-xs text-gray-500 mt-2">
-              Enter the 6-digit code from your authenticator app.
-            </p>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Password
+          </label>
+          <div className="relative">
+            <input
+              type="password"
+              required
+              className="w-full p-2 pr-10 border border-gray-300 rounded focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <Lock className="absolute right-3 top-2.5 h-4 w-4 text-gray-400" />
           </div>
-        )}
+        </div>
 
         <div className="pt-2">
           <button
@@ -136,7 +108,7 @@ export default function LoginPage() {
             className="w-full bg-primary text-white py-2 px-4 rounded font-medium hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
           >
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            {loading ? "Verifying..." : mfaRequired ? "Verify Code" : "Sign In"}
+            {loading ? "Verifying..." : "Sign In"}
           </button>
         </div>
       </form>

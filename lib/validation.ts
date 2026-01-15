@@ -10,7 +10,7 @@ export const registerSchema = z.object({
   email: z.string().email(),
   password: passwordSchema,
   name: z.string().min(2),
-  role: z.nativeEnum(Role).optional(), // Optional, defaults to STUDENT. In real app, only Admin can set roles.
+  role: z.enum(['STUDENT', 'LECTURER', 'MODERATOR', 'ADMIN']).optional(),
 });
 
 export const loginSchema = z.object({

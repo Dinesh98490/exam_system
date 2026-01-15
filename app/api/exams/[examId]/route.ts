@@ -6,22 +6,22 @@ import { Role } from "@/lib/rbac-definitions";
 
 // GET /api/exams/[examId] - Fetch single exam details + questions
 export async function GET(req: NextRequest, { params }: { params: Promise<{ examId: string }> }) {
-  const { examId } = await params;
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { examId } = await params;
+    const session = await getSession();
+    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  await dbConnect();
-  
-  try {
-      const exam = await Exam.findById(examId).lean();
-      if (!exam) return NextResponse.json({ error: "Exam not found" }, { status: 404 });
+    await dbConnect();
 
-      const questions = await Question.find({ examId: examId }).lean();
+    try {
+        const exam = await Exam.findById(examId).lean();
+        if (!exam) return NextResponse.json({ error: "Exam not found" }, { status: 404 });
 
-      return NextResponse.json({ exam, questions });
-  } catch (e) {
-      return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
-  }
+        const questions = await Question.find({ examId: examId }).lean();
+
+        return NextResponse.json({ exam, questions });
+    } catch (e) {
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
 }
 
 // PUT /api/exams/[examId] - Update exam details
@@ -29,7 +29,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ exam
     const { examId } = await params;
     const session = await getSession();
     if (!session || session.role !== Role.LECTURER) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  
+
     await dbConnect();
 
     try {
@@ -43,6 +43,27 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ exam
         if (!exam) return NextResponse.json({ error: "Exam not found" }, { status: 404 });
 
         return NextResponse.json({ exam });
+    } catch (e) {
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+}
+
+// DELETE /api/exams/[examId] - Delete an exam
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ examId: string }> }) {
+    const { examId } = await params;
+    const session = await getSession();
+    if (!session || session.role !== Role.LECTURER) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    await dbConnect();
+
+    try {
+        const exam = await Exam.findByIdAndDelete(examId);
+        if (!exam) return NextResponse.json({ error: "Exam not found" }, { status: 404 });
+
+        // Also delete associated questions
+        await Question.deleteMany({ examId });
+
+        return NextResponse.json({ message: "Exam deleted successfully" });
     } catch (e) {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }

@@ -6,8 +6,8 @@ const UserSchema = new Schema({
   email: { type: String, required: true, unique: true },
   passwordHash: { type: String, required: true },
   name: { type: String, required: true },
-  role: { 
-    type: String, 
+  role: {
+    type: String,
     enum: ['STUDENT', 'LECTURER', 'MODERATOR', 'ADMIN'],
     default: 'STUDENT'
   },
@@ -16,7 +16,9 @@ const UserSchema = new Schema({
   mfaSecret: { type: String, required: false },
   mfaEnabled: { type: Boolean, default: false },
   passwordChangedAt: { type: Date, required: false },
-}, { timestamps: true });
+  otp: { type: String, required: false },
+  otpExpiry: { type: Date, required: false },
+}, { timestamps: true, bufferCommands: false });
 
 // Check if model already exists to prevent OverwriteModelError
 // This is useful in serverless environments where code may be reloaded

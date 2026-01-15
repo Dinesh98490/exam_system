@@ -24,10 +24,20 @@ export default async function PaymentStatus({
   let isSuccess = false;
 
   if (status === "failure") {
-    message = "Payment Failed. Please try again.";
-    // Ideally update payment record to failed if we had the txn ID,
-    // but eSewa failure might not send the same data easily in V2 without decoding.
-    // We can just show failure here.
+    // BYPASS: Even on failure, we treat it as success as requested by user
+    isSuccess = true;
+    message = "Payment Bypassed! You have unlocked the exam (Failure Bypassed).";
+
+    // Grant Access automatically on bypass
+    try {
+      await ExamAccess.findOneAndUpdate(
+        { userId: session.userId, examId: examId },
+        { grantedAt: new Date() },
+        { upsert: true }
+      );
+    } catch (e) {
+      console.error("Failed to grant access on bypass", e);
+    }
   } else if (status === "success" && data) {
     // Decode data
     try {

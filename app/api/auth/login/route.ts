@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/mongoose";
 import User from "@/models/User";
+import { ActivityLog } from "@/models/ActivityLog";
 import { verifyPassword } from "@/lib/auth/password";
 import { createSession } from "@/lib/auth/session";
 import { loginSchema } from "@/lib/validation";
@@ -12,7 +13,7 @@ const MAX_FAILED_ATTEMPTS = 5;
 export async function POST(req: NextRequest) {
   try {
     await dbConnect(); // Ensure DB connection
-    
+
     const body = await req.json();
     const { email, password } = loginSchema.parse(body);
 
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
       // Increment failed attempts
       const attempts = (user.failedLoginAttempts || 0) + 1;
       const isLocked = attempts >= MAX_FAILED_ATTEMPTS;
-      
+
       // Update user directly
       user.failedLoginAttempts = attempts;
       user.isLocked = isLocked;
@@ -43,65 +44,47 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    // Check MFA
-    if (user.mfaEnabled && user.mfaSecret) {
-      if (!body.mfaCode) {
-        return NextResponse.json({ 
-          message: 'MFA required', 
-          mfaRequired: true 
-        });
-      }
+    // Send OTP instead of creating session immediately
+    const { generateOTP, sendOTP } = await import('@/lib/email');
+    const otp = generateOTP();
+    const otpExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
-      const { authenticator } = await import('otplib');
-      const isValidMfa = authenticator.check(body.mfaCode, user.mfaSecret);
+    // Save OTP to user document
+    user.otp = otp;
+    user.otpExpiry = otpExpiry;
+    await user.save();
 
-      if (!isValidMfa) {
-         // Increment failed attempts even for MFA failure? Yes, good practice.
-         const attempts = (user.failedLoginAttempts || 0) + 1;
-         user.failedLoginAttempts = attempts;
-         if (attempts >= MAX_FAILED_ATTEMPTS) {
-           user.isLocked = true;
-         }
-         await user.save();
-         return NextResponse.json({ error: 'Invalid MFA code' }, { status: 401 });
-      }
-    }
-
-    // Reset failed attempts
-    if (user.failedLoginAttempts > 0) {
-        user.failedLoginAttempts = 0;
-        await user.save();
-    }
-
-    // Auto-heal invalid roles (e.g. typos like "Stundet")
-    const VALID_ROLES = ['STUDENT', 'LECTURER', 'MODERATOR', 'ADMIN'];
-    if (!VALID_ROLES.includes(user.role)) {
-        await User.updateOne({ _id: user._id }, { $set: { role: 'STUDENT' } });
-        user.role = 'STUDENT'; // Update local instance for session creation
-    }
-
-    // Create Session
-    await createSession(user._id.toString(), user.role);
-
-    // Log Activity
+    // Send OTP via email
     try {
-      const { prisma } = await import('@/lib/db');
-      await prisma.activityLog.create({
-        data: {
-          userId: user._id.toString(),
-          action: 'LOGIN_SUCCESS',
-          ipAddress: req.headers.get('x-forwarded-for') || 'unknown',
-          metadata: { role: user.role }
-        }
+      await sendOTP(user.email, otp, user.name);
+    } catch (emailError) {
+      console.error('Email sending failed:', emailError);
+      // Clear OTP if email fails
+      user.otp = undefined;
+      user.otpExpiry = undefined;
+      await user.save();
+      return NextResponse.json({ error: 'Failed to send verification email. Please try again.' }, { status: 500 });
+    }
+
+    // Log OTP sent activity
+    try {
+      await ActivityLog.create({
+        userId: user._id.toString(),
+        action: 'OTP_SENT',
+        ipAddress: req.headers.get('x-forwarded-for') || 'unknown',
+        metadata: { email: user.email }
       });
     } catch (logError) {
       console.error("LOGGING_ERROR", logError);
     }
 
-    return NextResponse.json({ 
-        message: 'Logged in', 
-        user: { id: user._id.toString(), email: user.email, role: user.role } 
+    return NextResponse.json({
+      message: 'Verification code sent to your email',
+      otpRequired: true,
+      email: user.email
     });
+
+
 
   } catch (error: any) {
     console.error("LOGIN_ERROR:", error);
